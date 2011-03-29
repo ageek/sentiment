@@ -55,7 +55,7 @@ def autolabel(rects):
     # attach some text labels
     for rect in rects:
         height = rect.get_height()
-        plt.text(rect.get_x()+rect.get_width()/2., 1.05*height, '%d'%int(height),
+        plt.text(rect.get_x()+rect.get_width()/2., 1.03*height, '%d'%int(height),
                 ha='center', va='bottom')
 
 def plot(articles):
@@ -70,7 +70,7 @@ def plot(articles):
                 pos = pos+1
         negbars.append(neg)
         posbars.append(pos)
-
+        
     maxheight = max(max(negbars), max(posbars))
 
     N = len(articles) #number of keys
@@ -98,5 +98,4 @@ feeds = {'AJE':'http://english.aljazeera.net/Services/Rss/?PostingId=20077311059
          'CNN':'http://rss.cnn.com/rss/cnn_world.rss',
          'BBC':'http://feeds.bbci.co.uk/news/world/rss.xml'}
 
-articles = analyze_rss_feeds(feeds)
 plot(articles)
