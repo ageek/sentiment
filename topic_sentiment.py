@@ -1,9 +1,11 @@
 import datetime
 import json
+import urllib
 import feedparser
 import matplotlib.pyplot as plt
 import numpy as np
 from pattern.web import URL, Document, HTTP404NotFound, URLError, plaintext
+from pattern.en import wordnet, tag #must have sentiwordnet available
 
 def get_dom(url):
     
@@ -35,16 +37,19 @@ def heuristic_scrape(article):
 
 ##Bag-of-words sentiment analysis using SentiWordNet
 def sentiment(content):
-    from pattern.en import parse, split, wordnet #must have sentiwordnet available
-    wordnet.sentiment.load()
     relevant_types = ['JJ', 'VB', 'RB'] #adjectives, verbs, adverbs
     score = 0
-    sentences = split(parse(content, lemmata=True))
-    for sentence in sentences:
-        for word in sentence.words:
-            if word.type in relevant_types:
-                pos, neg, obj = wordnet.sentiment[word.lemma]
-                score = score + ((pos - neg) * (1 - obj)) #weight subjective words heavily
+    wordnet.sentiment.load()
+    synsets = wordnet.synsets
+    for word, pos in tag(content):
+            if pos in relevant_types:
+                try:
+                    synset = synsets(word, pos)[0].weight
+                except KeyError:
+                    #incorrect part of speech tag
+                    continue
+                ps, ns, os = synset
+                score = score + (ps - ns)
     return 1 if score >=0 else -1
 
 ##exploits a hidden (and very nice) direct API 
@@ -181,6 +186,8 @@ count = int(raw_input("How many: "))
 
 #build result dict to same format as RSS version so graphing doesn't change
 result = {}
+
+wordnet.sentiment.load()
 
 #for some reason, CNN only works on alternate runs
 #so get to it first to avoid wasting time on others
