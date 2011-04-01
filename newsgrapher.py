@@ -1,5 +1,5 @@
 import time
-import pickle
+import json
 import feedparser
 from pattern.vector import Document, LEMMA
 from pattern.web import Wikipedia, Google, NEWS
@@ -87,37 +87,23 @@ feedlist = {'AJE':'http://english.aljazeera.net/Services/Rss/?PostingId=20077311
 HOUR = 3600 #seconds
 DAY = 24
 
-topicdata = [] #(time.now, [(topic, hits)])
-
 timestr = str(time.time())
 
-storename = 'news/news-'+timestr+'.data'
-logname = 'news/news-'+timestr+'.log'
+logname = 'news/news-'+timestr+'.json'
 log = open(logname,'w')
 
 print timestr + ' starting NewsGrapher'
-log.write(timestr + ' starting NewsGrapher\n')
 for i in range(DAY*2):
     topics = gettopics(feedlist)
-    print topics
     topics = filter(isnews, topics)
-    print topics
     topics = map(lambda x: (x, gnewshits(x)), topics)
 
     data = (time.time(), topics)
-    topicdata.append(data)
-    
-    log.write(str(data) + "\n")
+    datastring = json.dumps(data)
+    log.write(datastring + "\n")
     log.flush()
-    
+    print datastring
     time.sleep(HOUR/2)
-    msg = str(time.time()) + ' ' + str(i+1) + 'half-hour has passed.\n'
-    print msg
-    log.write(msg)
-    log.flush()
 log.close()
-store = open(storename, 'w')
-pickle.dump(topicdata, store)
-store.close()
     
     
