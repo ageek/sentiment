@@ -1,6 +1,5 @@
 from pattern.en import parse, split, wordnet, tag
 import os
-import time
 import re
 
 def sentiment(content):
@@ -13,11 +12,9 @@ def sentiment(content):
                     synset = synsets(word, pos)[0].weight
                 except KeyError:
                     #incorrect part of speech tag
-                    #print word
                     continue
-                ps, ns, os = synset
-                score = score + (ps - ns) * (1 - os)
-                #print word, (ps - ns) * (1 - os)
+                positivity, negativity, objectivity = synset
+                score = score + (positivity - negativity) * (1 - objectivity)
     return score
 
 
@@ -34,9 +31,7 @@ pos_std = 3.15019581999
 total_mean = -0.1276983125
 total_std = 3.12805937093
 
-pos, neg, times, scores = [], [], [], []
 wordnet.sentiment.load()
-
 
 def meanstdv(x):
     from math import sqrt
@@ -58,21 +53,19 @@ def test(d):
             try:
                 content = f.read()
                 content = norm(content)
-                start = time.time()
                 score = sentiment(content)
                 if score < total_mean:
                     neg.append(name)
                 else:
                     pos.append(name)
                 scores.append(score)
-                end = time.time()
-                times.append(end - start)
             except ValueError as e:
                 print name, e
                 break
             finally:
                 f.close()
-
+                
+pos, neg, scores = [], [], []
 test('data/reviews/txt_sentoken/neg')                         
 print 'positive reviews: %d, negative reviews: %d, total reviews: %d' % (len(pos), len(neg), len(pos)+len(neg))
 print "highest score was %f" % max(scores)
@@ -80,7 +73,7 @@ print "lowest score was %f" % min(scores)
 mean, std = meanstdv(scores)
 print mean, std
 
-pos, neg, times, scores = [], [], [], []
+pos, neg, scores = [], [], []
 test('data/reviews/txt_sentoken/pos')                         
 print 'positive reviews: %d, negative reviews: %d, total reviews: %d' % (len(pos), len(neg), len(pos)+len(neg))
 print "highest score was %f" % max(scores)
