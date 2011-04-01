@@ -1,6 +1,5 @@
 import time
 import pickle
-import pylab
 import feedparser
 from pattern.vector import Document, LEMMA
 from pattern.web import Wikipedia, Google, NEWS
@@ -44,9 +43,10 @@ def gettopics(feeds):
     topics = []
     for key in topdict:
         if topdict[key] > 0: #mentioned more than once
-            if(key.endswith('ium')):
-            #stemmer thinks country names are Latin plurals
-               topics.append(key.replace('ium','ia'))
+            if(key.endswith('um')):
+                key = key.replace('ium','ia') #Syria, Russia
+                key = key.replace('atum','ata') #Misrata
+                topics.append(key)
             else:
                 topics.append(key)
 
@@ -90,12 +90,14 @@ DAY = 24
 topicdata = [] #(time.now, [(topic, hits)])
 
 timestr = str(time.time())
+
 storename = 'news/news-'+timestr+'.data'
 logname = 'news/news-'+timestr+'.log'
 log = open(logname,'w')
+
 print timestr + ' starting NewsGrapher'
 log.write(timestr + ' starting NewsGrapher\n')
-for i in range(DAY):
+for i in range(DAY*2):
     topics = gettopics(feedlist)
     print topics
     topics = filter(isnews, topics)
@@ -108,12 +110,12 @@ for i in range(DAY):
     log.write(str(data) + "\n")
     log.flush()
     
-    time.sleep(HOUR)
-    msg = str(time.time()) + ' hour ' + str(i+1) + ' has passed.\n'
+    time.sleep(HOUR/2)
+    msg = str(time.time()) + ' ' + str(i+1) + 'half-hour has passed.\n'
     print msg
     log.write(msg)
+    log.flush()
 log.close()
-
 store = open(storename, 'w')
 pickle.dump(topicdata, store)
 store.close()
