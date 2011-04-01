@@ -1,4 +1,4 @@
-from pattern.en import parse, split, wordnet, tag
+from pattern.en import wordnet, tag
 import os
 import re
 
@@ -24,6 +24,43 @@ def norm(s):
     content = re.sub('\W' ,' ',content)
     return content
 
+def meanstdv(x):
+    from math import sqrt
+    mean, std = 0, 0
+    mean = sum(x) / float(len(x))
+    dist = sum([(w - mean)**2 for w in x])
+    std = sqrt(dist / float(len(x)-1))
+    return mean, std
+
+def test(directory, howmany=1000):
+    count = 0
+    pos, neg, scores = [], [], []
+    for dirpath, dirnames, filenames in os.walk(directory):
+        print dirpath
+        for name in filenames:
+            if count == howmany:
+                break
+            
+            f = open(os.path.join(dirpath,name), 'r')
+            content = f.read()
+            f.close()
+            
+            content = norm(content)
+            score = sentiment(content)
+            
+            neg.append(name) if score < total_mean else pos.append(name)
+                
+            scores.append(score)
+
+            count = count + 1
+
+    print 'positive reviews: %d, negative reviews: %d, total reviews: %d' \
+          % (len(pos), len(neg), len(pos)+len(neg))
+    print 'highest score was %f' % max(scores)
+    print 'lowest score was %f' % min(scores)
+    mean, std = meanstdv(scores)
+    print 'mean: %f std: %f' % (mean, std)
+
 neg_mean = -1.055849375
 neg_std = 2.78978505151
 pos_mean = 0.80045275
@@ -32,52 +69,6 @@ total_mean = -0.1276983125
 total_std = 3.12805937093
 
 wordnet.sentiment.load()
-
-def meanstdv(x):
-    from math import sqrt
-    n, mean, std = len(x), 0, 0
-    for a in x:
-        mean = mean + a
-    mean = mean / float(n)
-    for a in x:
-        std = std + (a - mean)**2
-    std = sqrt(std / float(n-1))
-    return mean, std
-
-def test(d):
-    for dirpath, dirnames, filenames in os.walk(d):
-        print dirpath
-        count = 0
-        for name in filenames:
-            f = open(os.path.join(dirpath,name), 'r')
-            try:
-                content = f.read()
-                content = norm(content)
-                score = sentiment(content)
-                if score < total_mean:
-                    neg.append(name)
-                else:
-                    pos.append(name)
-                scores.append(score)
-            except ValueError as e:
-                print name, e
-                break
-            finally:
-                f.close()
                 
-pos, neg, scores = [], [], []
-test('data/reviews/txt_sentoken/neg')                         
-print 'positive reviews: %d, negative reviews: %d, total reviews: %d' % (len(pos), len(neg), len(pos)+len(neg))
-print "highest score was %f" % max(scores)
-print "lowest score was %f" % min(scores)
-mean, std = meanstdv(scores)
-print mean, std
-
-pos, neg, scores = [], [], []
-test('data/reviews/txt_sentoken/pos')                         
-print 'positive reviews: %d, negative reviews: %d, total reviews: %d' % (len(pos), len(neg), len(pos)+len(neg))
-print "highest score was %f" % max(scores)
-print "lowest score was %f" % min(scores)
-mean, std = meanstdv(scores)
-print mean, std
-    
+test('data/reviews/txt_sentoken/neg')
+test('data/reviews/txt_sentoken/pos')
