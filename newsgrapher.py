@@ -44,7 +44,11 @@ def gettopics(feeds):
     topics = []
     for key in topdict:
         if topdict[key] > 0: #mentioned more than once
-            topics.append(key)
+            if(key.endswith('ium')):
+            #stemmer thinks country names are Latin plurals
+               topics.append(key.replace('ium','ia'))
+            else:
+                topics.append(key)
 
     return topics
 
@@ -90,10 +94,12 @@ storename = 'news/news-'+timestr+'.data'
 logname = 'news/news-'+timestr+'.log'
 log = open(logname,'w')
 print timestr + ' starting NewsGrapher'
-log.write(timestr + 'starting NewsGrapher\n')
+log.write(timestr + ' starting NewsGrapher\n')
 for i in range(DAY):
     topics = gettopics(feedlist)
+    print topics
     topics = filter(isnews, topics)
+    print topics
     topics = map(lambda x: (x, gnewshits(x)), topics)
 
     data = (time.time(), topics)
