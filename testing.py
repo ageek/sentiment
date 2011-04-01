@@ -3,8 +3,13 @@ import os
 import re
 
 def sentiment(content):
+    
+    if len(wordnet.sentiment) == 0:
+        wordnet.sentiment.load()
+        
     relevant_types = ['JJ', 'VB', 'RB'] #adjectives, verbs, adverbs
     score = 0
+    
     synsets = wordnet.synsets
     for word, pos in tag(content):
             if pos in relevant_types:
@@ -15,13 +20,17 @@ def sentiment(content):
                     continue
                 positivity, negativity, objectivity = synset
                 score = score + (positivity - negativity) * (1 - objectivity)
+                
     return score
 
+def normalize(s):
+    s = re.sub('\W' ,' ', s).lower()
+    return s
 
 def norm(s):
     lines = s.split('\n')
     content = "".join(lines)
-    content = re.sub('\W' ,' ',content)
+    content = re.sub('\W' ,' ', content)
     return content
 
 def meanstdv(x):
@@ -33,6 +42,12 @@ def meanstdv(x):
     return mean, std
 
 def test(directory, howmany=1000):
+##    neg_mean = -1.055849375
+##    neg_std = 2.78978505151
+##    pos_mean = 0.80045275
+##    pos_std = 3.15019581999
+    total_mean = -0.1276983125
+##    total_std = 3.12805937093
     count = 0
     pos, neg, scores = [], [], []
     for dirpath, dirnames, filenames in os.walk(directory):
@@ -61,14 +76,6 @@ def test(directory, howmany=1000):
     mean, std = meanstdv(scores)
     print 'mean: %f std: %f' % (mean, std)
 
-neg_mean = -1.055849375
-neg_std = 2.78978505151
-pos_mean = 0.80045275
-pos_std = 3.15019581999
-total_mean = -0.1276983125
-total_std = 3.12805937093
-
-wordnet.sentiment.load()
-                
-test('data/reviews/txt_sentoken/neg')
-test('data/reviews/txt_sentoken/pos')
+def testreviews():             
+    test('data/reviews/txt_sentoken/neg')
+    test('data/reviews/txt_sentoken/pos')
