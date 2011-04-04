@@ -28,8 +28,9 @@ def gettopics(feeds):
     
     for doc in documents:
         words = []
-        for tup in doc.keywords(top=20):
-            words.append(str(tup[1]))
+        #lowercasing in pattern 1.6 changes keywords results
+        for tup in doc.keywords(top=30):
+            words.append(str(tup[1]).decode('unicode_escape'))
         topicsets.append(words)
 
     topdict = {}
@@ -57,7 +58,7 @@ def isnews(topic):
     engine = Wikipedia()
     result = engine.search(topic)
     if result:
-        if topic not in result.title:
+        if topic.lower() not in result.title.lower():
             return False
         newsthings = ['places','cities','capitals','countries','people','wars']
         categories = result.categories
@@ -84,26 +85,26 @@ feedlist = {'AJE':'http://english.aljazeera.net/Services/Rss/?PostingId=20077311
             'APTOP':'http://hosted2.ap.org/atom/APDEFAULT/3d281c11a96b4ad082fe88aa0db04305',
             'APWORLD':'http://hosted2.ap.org/atom/APDEFAULT/cae69a7523db45408eeb2b3a98c0c9c5'}
 
-HOUR = 3600 #seconds
+HOUR = 3600
 DAY = 24
 
-timestr = str(time.time())
+while True:   
+    timestr = str(time.time())
+    logname = 'news/news-'+timestr+'.json'
+    log = open(logname,'w')
 
-logname = 'news/news-'+timestr+'.json'
-log = open(logname,'w')
+    print timestr + ' starting a new day'
+    for i in range(DAY):
+        topics = gettopics(feedlist)
+        topics = filter(isnews, topics)
+        topics = map(lambda x: (x, gnewshits(x)), topics)
 
-print timestr + ' starting NewsGrapher'
-for i in range(DAY*2):
-    topics = gettopics(feedlist)
-    topics = filter(isnews, topics)
-    topics = map(lambda x: (x, gnewshits(x)), topics)
-
-    data = (time.time(), topics)
-    datastring = json.dumps(data)
-    log.write(datastring + "\n")
-    log.flush()
-    print datastring
-    time.sleep(HOUR/2)
-log.close()
+        data = (time.time(), topics)
+        datastring = json.dumps(data)
+        log.write(datastring + "\n")
+        log.flush()
+        print datastring
+        time.sleep(HOUR)
+    log.close()
     
     
